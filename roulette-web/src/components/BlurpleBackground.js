@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import Particles from "react-particles";
 import { loadFull } from "tsparticles";
 import "./stylesheets/BlurpleBackground.css";
@@ -73,16 +73,20 @@ function BlurpleBackground({
         await loadFull(engine);
     };
 
+    const particlesElem = useMemo(() => (
+        <Particles
+            id="blurple-particles"
+            init={particlesInit}
+            options={PARTICLES_PARAMS}
+            style={{
+                zIndex: -1
+            }}
+        />
+    ), []);
+
     return (
         <div className="blurple-background">
-            <Particles
-                id="blurple-particles"
-                init={particlesInit}
-                options={PARTICLES_PARAMS}
-                style={{
-                    zIndex: -1
-                }}
-            />
+            {particlesElem}
             <div className="blurple-background-content">
                 {children}
             </div>
