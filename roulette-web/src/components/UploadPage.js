@@ -1,34 +1,67 @@
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import "./stylesheets/UploadPage.css";
+import { useDispatch } from "react-redux";
+import { addFile, mergeMessages } from "../helpers/slices/chatDataSlice";
 import BlurpleBackground from "./BlurpleBackground";
 import Button from "./Button";
 import Spacer from "./Spacer";
 import Center from "./Center";
 import Twemoji from "react-twemoji";
+import "./stylesheets/UploadPage.css";
+import { useNavigate } from "react-router-dom";
+import { generateGameCode } from "../helpers/util";
+import { initializeGame } from "../helpers/slices/gameStateSlice";
 
 function UploadPage() {
     const [error, setError] = React.useState(null);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
 
-    const onDrop = useCallback(files => {
+    const onFilesFinishedUploading = useCallback(() => {
+        const gameCode = generateGameCode();
+        dispatch(mergeMessages());
+        dispatch(initializeGame());
+        navigate(`/game/${gameCode}`);
+    }, [dispatch, navigate]);
+
+    const onDrop = useCallback(async files => {
         setError(null);
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onabort = () => setError("File reading was aborted");
-            reader.onerror = () => setError("Error reading files!");
-            reader.onload = () => {
-                let json;
-                try {
-                    json = JSON.parse(reader.result);
-                } catch(e) {
-                    setError("Your file is not valid JSON. Try exporting again.");
+        const promises = [...files].map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onabort = () => {
+                    console.error("File reading aborted");
+                    reject();
                     return;
                 }
-                
-            };
-            reader.readAsText(file);
+                reader.onerror = () => {
+                    console.error("File reading errored");
+                    reject();
+                    return;
+                }
+                reader.onload = () => {
+                    let json;
+                    try {
+                        json = JSON.parse(reader.result);
+                    } catch(e) {
+                        console.error(e);
+                        reject();
+                        return;
+                    }
+                    dispatch(addFile(json));
+                    resolve();
+                };
+                reader.readAsText(file);
+            });
         });
-    }, []);
+        try {
+            await Promise.all(promises);
+        } catch(e) {
+            setError("One or more files was unable to be read.");
+            return;
+        }
+        onFilesFinishedUploading();
+    }, [dispatch]);
 
     const {getRootProps, getInputProps, isDragActive} = useDropzone({onDrop});
 

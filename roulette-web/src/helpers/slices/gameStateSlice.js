@@ -3,16 +3,15 @@ import { createSlice } from "@reduxjs/toolkit";
 export const gameStateSlice = createSlice({
     name: "gameState",
     initialState: {
-        gameCode: null,
         host: null,
         activePlayers: null,
     },
     reducers: {
-        setGameCode: (state, action) => {
-            state.gameCode = action.payload.gameCode;
+        initializeGame: (state, action) => {
+            
         },
     },
 });
 
-export const { setGameCode } = gameStateSlice.actions;
+export const { initializeGame } = gameStateSlice.actions;
 export default gameStateSlice.reducer;
