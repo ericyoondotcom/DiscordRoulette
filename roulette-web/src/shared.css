@@ -3,7 +3,6 @@
 
 body {
     font-family: "Lexend", sans-serif;
-    text-align: center;
 }
 
 h1, h2, h3, h4, h5, h6, p {
@@ -17,7 +16,8 @@ h2 {
     font-size: 30px;
 }
 p {
-    font-size: 15px;
+    font-size: 17px;
+    line-height: 27px;
 }
 
 .rails {
@@ -26,4 +26,13 @@ p {
 
 .discord-font {
     font-family: "Whitney", sans-serif;
+}
+
+a.nostyle {
+    text-decoration: none;
+    color: inherit;
+}
+
+.error {
+    color: #ED4245;
 }
