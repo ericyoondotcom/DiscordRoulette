@@ -1,0 +1,13 @@
+.avatar-stack {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar-stack img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
