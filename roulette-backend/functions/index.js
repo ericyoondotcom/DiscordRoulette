@@ -1,19 +1,86 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
-const {onRequest} = require("firebase-functions/v2/https");
+const {onCall, HttpsError} = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
+const admin = require("firebase-admin");
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+const GAME_CODE_LENGTH = 6;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+const DEFAULT_GAME_STATE = {
+    gamePhase: "waiting-for-players", // idle, waiting-for-players, voting, results, closed
+    // activePlayerIds: {},
+    // votes: {}, // ( player id : id of player they voted for )
+    // points: {}, // ( player id : number of points )
+    // currentMessage: {},
+};
+
+admin.initializeApp();
+
+const db = admin.database();
+
+exports.hostGame = onCall(async request => {
+    const gameCode = request.data.gameCode;
+    const members = request.data.members;
+    
+    if(typeof(gameCode) !== "string" || gameCode.length !== GAME_CODE_LENGTH) {
+        throw new HttpsError("invalid-argument", "gameCode must be a string of length 6");
+    }
+    if(typeof(members) !== "object") {
+        throw new HttpsError("invalid-argument", "members must be an object");
+    }
+    for(const [id, member] of Object.entries(members)) {
+        const keys = Object.keys(member);
+        if(!keys.includes("displayName") || !keys.includes("avatarUrl") || keys.length !== 2) {
+            throw new HttpsError("invalid-argument", "each member must only have 2 keys: displayName and avatarUrl");
+        }
+    }
+
+    const newGameState = {...DEFAULT_GAME_STATE};
+    newGameState.startedAt = Date.now();
+    newGameState.members = members;
+    await db.ref(`/games/${gameCode}`).set(newGameState);
+
+    console.log("host game");
+    return {success: true};
+});
+
+exports.joinGame = onCall(async request => {
+    const gameCode = request.data.gameCode;
+    const myDiscordId = request.data.myDiscordId;
+    
+    if(typeof(gameCode) !== "string" || gameCode.length !== GAME_CODE_LENGTH) {
+        throw new HttpsError("invalid-argument", "gameCode must be a string of length 6");
+    }
+    if(typeof(myDiscordId) !== "string") {
+        throw new HttpsError("invalid-argument", "myDiscordId must be a string");
+    }
+
+    await db.ref(`/games/${gameCode}/activePlayerIds/${myDiscordId}`).set(true);
+    console.log("join game")
+    return {success: true};
+});
+
+exports.leaveGame = onCall(async request => {
+    const gameCode = request.data.gameCode;
+    const myDiscordId = request.data.myDiscordId;
+    const userWasHost = request.data.userWasHost;
+    
+    if(typeof(gameCode) !== "string" || gameCode.length !== GAME_CODE_LENGTH) {
+        throw new HttpsError("invalid-argument", "gameCode must be a string of length 6");
+    }
+    if(typeof(myDiscordId) !== "string") {
+        throw new HttpsError("invalid-argument", "myDiscordId must be a string");
+    }
+
+    if(userWasHost) {
+        await db.ref(`/games/${gameCode}/gamePhase`).set("closed");
+    } else {
+        await db.ref(`/games/${gameCode}/activePlayerIds/${myDiscordId}`).set(false);
+    }
+    console.log("leave game! host: " + userWasHost);
+    return {success: true};
+});
+
+// startRound
+
+// vote
+
+// endRound

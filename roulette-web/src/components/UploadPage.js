@@ -1,7 +1,7 @@
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useDispatch } from "react-redux";
-import { addFile, mergeMessages } from "../helpers/slices/chatDataSlice";
+import { addFile, mergeMessages, resetChatData } from "../helpers/slices/chatDataSlice";
 import BlurpleBackground from "./BlurpleBackground";
 import Button from "./Button";
 import Spacer from "./Spacer";
@@ -10,14 +10,15 @@ import Twemoji from "react-twemoji";
 import "./stylesheets/UploadPage.css";
 import { useNavigate } from "react-router-dom";
 import { generateGameCode } from "../helpers/util";
-import { initializeGame } from "../helpers/slices/gameStateSlice";
+import { initializeGame, resetGameState } from "../helpers/slices/gameStateSlice";
+import useFirebase from "../hooks/useFirebase";
 
 function UploadPage() {
     const [error, setError] = React.useState(null);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const onFilesFinishedUploading = useCallback(() => {
+    const onFilesFinishedUploading = useCallback(async () => {
         const gameCode = generateGameCode();
         dispatch(mergeMessages());
         dispatch(initializeGame());
@@ -25,6 +26,8 @@ function UploadPage() {
     }, [dispatch, navigate]);
 
     const onDrop = useCallback(async files => {
+        dispatch(resetChatData())
+        dispatch(resetGameState())
         setError(null);
         const promises = [...files].map(file => {
             return new Promise((resolve, reject) => {

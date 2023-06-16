@@ -11,6 +11,11 @@ export const chatDataSlice = createSlice({
         members: {},
     },
     reducers: {
+        resetChatData: (state, action) => {
+            state.rawFilesJson = [];
+            state.mergedMessageRuns = [];
+            state.members = {};
+        },
         addFile: (state, action) => {
             state.rawFilesJson.push(action.payload);
         },
@@ -57,8 +62,11 @@ export const chatDataSlice = createSlice({
             state.members = newMembers;
             state.rawFilesJson = []; // Clear out raw files because we don't need them anymore
         },
+        onMembersChanged: (state, action) => {
+            state.members = action.payload;
+        },
     },
 });
 
-export const { addFile, mergeMessages } = chatDataSlice.actions;
+export const { resetChatData, addFile, mergeMessages, onMembersChanged } = chatDataSlice.actions;
 export default chatDataSlice.reducer;

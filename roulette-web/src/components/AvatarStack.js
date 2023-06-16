@@ -10,7 +10,7 @@ function AvatarStack({ userIds }) {
         const member = members[id];
         if(!member) return null;
         return (
-            <img src={member.avatarUrl} alt={member.displayName} />
+            <img src={member.avatarUrl} alt={member.displayName} key={id} />
         );
     });
 

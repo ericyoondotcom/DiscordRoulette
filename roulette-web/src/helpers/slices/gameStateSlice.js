@@ -9,6 +9,12 @@ export const gameStateSlice = createSlice({
         myDiscordId: null,
     },
     reducers: {
+        resetGameState: (state, action) => {
+            state.isLocalClientHost = false;
+            state.gamePhase = "idle";
+            state.activePlayerIds = [];
+            state.myDiscordId = null;
+        },
         initializeGame: (state, action) => {
             state.isLocalClientHost = true;
             state.gamePhase = "waiting-for-players";
@@ -16,9 +22,15 @@ export const gameStateSlice = createSlice({
         },
         onUserSelect: (state, action) => {
             state.myDiscordId = action.payload;
-        }
+        },
+        onGamePhaseChanged: (state, action) => {
+            state.gamePhase = action.payload;
+        },
+        onActivePlayerIdsChanged: (state, action) => {
+            state.activePlayerIds = action.payload;
+        },
     },
 });
 
-export const { initializeGame, onUserSelect } = gameStateSlice.actions;
+export const { resetGameState, initializeGame, onUserSelect, onGamePhaseChanged, onActivePlayerIdsChanged } = gameStateSlice.actions;
 export default gameStateSlice.reducer;

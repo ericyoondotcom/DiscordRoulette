@@ -11,7 +11,7 @@ function UserSelect({
 }) {
     const members = useSelector(state => state.chatData.members);
     const activePlayerIds = useSelector(state => state.gameState.activePlayerIds);
-
+    if(!members || !activePlayerIds) return null;
     const entries = Object.keys(members).map(id => {
         if(activePlayerIds.includes(id)) {
             if(onlyShowInactiveUsers) return null;
@@ -20,7 +20,7 @@ function UserSelect({
         }
         const member = members[id];
         return (
-            <div className="user-entry" onClick={() => {
+            <div className="user-entry" key={id} onClick={() => {
                 if(onUserSelect) onUserSelect(id);
             }}>
                 <img src={member.avatarUrl} alt={member.displayName} />
