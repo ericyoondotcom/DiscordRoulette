@@ -1,5 +1,7 @@
 import { createSlice, current } from "@reduxjs/toolkit";
 
+const MESSAGE_MIN_LENGTH = 40; // The minimum length a message must be to show up in rotation
+
 export const chatDataSlice = createSlice({
     name: "chatData",
     initialState: {
@@ -31,7 +33,7 @@ export const chatDataSlice = createSlice({
                     if(message.author.id === currentAuthorId) {
                         thisRunContent += message.content + '\n';
                     } else {
-                        if(thisRunContent.length > 0) {
+                        if(thisRunContent.length >= Math.max(1, MESSAGE_MIN_LENGTH)) {
                             newMergedMessageRuns.push({
                                 content: thisRunContent,
                                 authorId: currentAuthorId,
@@ -50,7 +52,7 @@ export const chatDataSlice = createSlice({
                     }
                 }
 
-                if(thisRunContent.length > 0) {
+                if(thisRunContent.length >= Math.max(1, MESSAGE_MIN_LENGTH)) {
                     newMergedMessageRuns.push({
                         content: thisRunContent,
                         authorId: currentAuthorId,

@@ -9,7 +9,8 @@ function Message({
     avatarTwemoji,
     avatarBackgroundColor,
     username,
-    text
+    text,
+    animated
 }) {
     const avatar = avatarUrl ? (
         <img className="message-avatar" alt={`${username}'s avatar`} src={avatarUrl} />
@@ -20,7 +21,7 @@ function Message({
     );
 
     return (
-        <div className="message">
+        <div className={`message ${animated ? "animated" : ""}`}>
             {avatar}
             <div className="right-content">
                 <p className="message-username discord-font">{username}</p>
@@ -38,6 +39,7 @@ Message.propTypes = {
     avatarBackgroundColor: PropTypes.string,
     username: PropTypes.string.isRequired,
     text: PropTypes.string.isRequired,
+    animated: PropTypes.bool,
 };
 
 export default Message;

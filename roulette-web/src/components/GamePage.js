@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import UserSelect from "./UserSelect";
 import Center from "./Center";
 import Button from "./Button";
+import Message from "./Message";
 import Spacer from "./Spacer";
 import { onUserSelect, resetGameState } from "../helpers/slices/gameStateSlice";
 import AvatarStack from "./AvatarStack";
@@ -23,6 +24,14 @@ function GamePage() {
     const activePlayerIds = useSelector(state => state.gameState.activePlayerIds);
     const phase = useSelector(state => state.gameState.gamePhase);
     const members = useSelector(state => state.chatData.members);
+    const mergedMessageRuns = useSelector(state => state.chatData.mergedMessageRuns);
+    const votes = useSelector(state => state.gameState.votes) || {};
+    const points = useSelector(state => state.gameState.points) || {};
+    const currentMessageRun = useSelector(state => state.gameState.currentMessageRun);
+
+    const getRandomMessage = useCallback(() => {
+        return mergedMessageRuns[Math.floor(Math.random() * mergedMessageRuns.length)];
+    }, [mergedMessageRuns]);
 
     const handleTabClose = useCallback(async (e) => {
         console.log("Handle tab close!")
@@ -42,12 +51,26 @@ function GamePage() {
     useEffect(() => {
         if(!isLocalClientHost) return;
         firebase.hostGame(gameCode, members);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLocalClientHost]);
 
-    const onPlayerSelect = (id) => {
+    const onPlayerSelect = useCallback((id) => {
         dispatch(onUserSelect(id));
         firebase.joinGame(gameCode, id);
-    }
+    }, [dispatch, firebase, gameCode]);
+
+    const nextRound = useCallback(() => {
+        const messageRun = getRandomMessage();
+        firebase.startRound(gameCode, messageRun);
+    }, [firebase, gameCode, getRandomMessage]);
+
+    const showResults = useCallback(() => {
+        firebase.showResults(gameCode);
+    }, [firebase, gameCode]);
+
+    const castVote = useCallback((id) => {
+        firebase.vote(gameCode, myDiscordId, id);
+    }, [firebase, gameCode, myDiscordId]);
 
     if(phase === "closed") {
         return (
@@ -80,6 +103,94 @@ function GamePage() {
             <h2>Waiting for players to join...</h2>
             <Spacer height="30px" />
             <AvatarStack userIds={activePlayerIds} />
+            <Spacer height="50px" />
+            {
+                (isLocalClientHost && activePlayerIds.length >= 2) && (
+                    <Center>
+                        <Button content="Start game" emoji="🎉" onClick={nextRound} />
+                    </Center>
+                )
+            }
+        </div>
+    );
+
+    const voting = (phase === "voting" && myDiscordId && votes && currentMessageRun) && (
+        <div className="voting">
+            <Message
+                avatarTwemoji="❓"
+                avatarBackgroundColor="#4f2b2d"
+                username="???"
+                text={currentMessageRun.content}
+            />
+            <Spacer height="50px" />
+            {
+                myDiscordId in votes ? (
+                    <>
+                        <h3>Voted:</h3>
+                        <Spacer height="20px" />
+                        <AvatarStack userIds={Object.keys(votes)} />
+                        <Spacer height="20px" />
+                        <h3>Waiting for:</h3>
+                        <Spacer height="20px" />
+                        <AvatarStack userIds={activePlayerIds.filter(id => !(id in votes))} />
+                        <Spacer height="20px" />
+                        {
+                            isLocalClientHost && (
+                                <Center>
+                                    <Button content="Show results" emoji="👀" onClick={showResults} />
+                                </Center>
+                            )
+                        }
+                    </>
+                ) : (
+                    <UserSelect
+                        title="Who sent this message?"
+                        onUserSelect={castVote}
+                    />
+                )
+            }
+        </div>
+    );
+
+    const winners = (votes && currentMessageRun) && Object.keys(votes).filter(id => votes[id] === currentMessageRun.authorId);
+    const leaderboard = (phase === "results" && myDiscordId && points) &&
+        [...activePlayerIds].sort((a, b) => (points[b] || 0) - (points[a] || 0))
+        .map(id => (
+            <div className="leaderboard-entry" key={id}>
+                <AvatarStack userIds={[id]} />
+                <p><b>{members[id].displayName}</b></p>
+                <p>{points[id] || 0} points</p>
+            </div>
+        ));
+
+    const results = (phase === "results" && myDiscordId) && (
+        <div className="results">
+            <Message
+                avatarUrl={members[currentMessageRun.authorId].avatarUrl}
+                username={members[currentMessageRun.authorId].displayName}
+                text={currentMessageRun.content}
+                animated
+            />
+            <Spacer height="20px" />
+            <h2>Winners</h2>
+            <Spacer height="20px" />
+            <AvatarStack userIds={winners} />
+            {
+                isLocalClientHost && (
+                    <Center>
+                        <Spacer height="50px" />
+                        <Button content="Next round" emoji="💯" onClick={nextRound} />
+                    </Center>
+                )
+            }
+            <Spacer height="50px" />
+            <h2>Leaderboard</h2>
+            <Spacer height="20px" />
+            <Center>
+                <div id="leaderboard">
+                    {leaderboard}
+                </div>
+            </Center>
         </div>
     );
 
@@ -91,6 +202,8 @@ function GamePage() {
                 <Spacer height="50px" />
                 {playerSelect}
                 {lobby}
+                {voting}
+                {results}
             </BlurpleBackground>
         </div>
     );
