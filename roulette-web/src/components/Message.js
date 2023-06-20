@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import Twemoji from "react-twemoji";
 import "./stylesheets/Message.css";
 import TwemojiText from "./TwemojiText";
+import ReactMarkdown from "react-markdown";
 
 function Message({
     avatarUrl,
@@ -26,7 +27,9 @@ function Message({
             <div className="right-content">
                 <p className="message-username discord-font">{username}</p>
                 <TwemojiText>
-                    <p className="message-text discord-font">{text}</p>
+                    <p className="message-text discord-font">
+                        <ReactMarkdown>{text}</ReactMarkdown>
+                    </p>
                 </TwemojiText>
             </div>
         </div>

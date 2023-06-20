@@ -15,8 +15,8 @@ function LandingPage() {
                 <Message
                     avatarTwemoji="❓"
                     avatarBackgroundColor="#4f2b2d"
-                    username="Guess Who"
-                    text="Import your friends' messages. Guess who said what."
+                    username="Who sent this message?"
+                    text={"💬 Import your Discord messages.\n\n👀 Everyone sees the same random message.\n\n🙋 Guess who said what."}
                 />
                 <Spacer height="5vh" />
                 <Center>

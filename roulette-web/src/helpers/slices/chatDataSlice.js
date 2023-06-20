@@ -31,7 +31,7 @@ export const chatDataSlice = createSlice({
                 for(const message of file) {
                     // Detect runs of messages from the same author and combine them
                     if(message.author.id === currentAuthorId) {
-                        thisRunContent += message.content + '\n';
+                        thisRunContent += message.content + "\n\n";
                     } else {
                         if(thisRunContent.length >= Math.max(1, MESSAGE_MIN_LENGTH)) {
                             newMergedMessageRuns.push({
