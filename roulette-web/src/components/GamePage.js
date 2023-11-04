@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
 import { Link, useBeforeUnload, useLocation, useParams } from "react-router-dom";
 import BlurpleBackground from "./BlurpleBackground";
@@ -22,6 +22,7 @@ function GamePage() {
     const myDiscordId = useSelector(state => state.gameState.myDiscordId);
     const isLocalClientHost = useSelector(state => state.gameState.isLocalClientHost);
     const activePlayerIds = useSelector(state => state.gameState.activePlayerIds);
+    const inactivePlayerIds = useSelector(state => state.gameState.inactivePlayerIds);
     const phase = useSelector(state => state.gameState.gamePhase);
     const members = useSelector(state => state.chatData.members);
     const mergedMessageRuns = useSelector(state => state.chatData.mergedMessageRuns);
@@ -33,26 +34,13 @@ function GamePage() {
         return mergedMessageRuns[Math.floor(Math.random() * mergedMessageRuns.length)];
     }, [mergedMessageRuns]);
 
-    const handleTabClose = useCallback(async (e) => {
-        console.log("Handle tab close!")
-        if(e) e.preventDefault();
-        await firebase.leaveGame(gameCode, myDiscordId, isLocalClientHost);
-        dispatch(resetGameState());
-        dispatch(resetChatData());
-    }, [dispatch, firebase, gameCode, isLocalClientHost, myDiscordId]);
-
-    useEffect(() => {
-        window.addEventListener("beforeunload", handleTabClose);
-        return () => {
-            window.removeEventListener("beforeunload", handleTabClose);
-        }
-    });
-
     useEffect(() => {
         if(!isLocalClientHost) return;
         firebase.hostGame(gameCode, members);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLocalClientHost]);
+
+    const isKicked = useMemo(() => myDiscordId && inactivePlayerIds.includes(myDiscordId), [myDiscordId, inactivePlayerIds]);
 
     const onPlayerSelect = useCallback((id) => {
         dispatch(onUserSelect(id));
@@ -71,6 +59,28 @@ function GamePage() {
     const castVote = useCallback((id) => {
         firebase.vote(gameCode, myDiscordId, id);
     }, [firebase, gameCode, myDiscordId]);
+
+    const onUserKick = isLocalClientHost ? (id) => {
+    firebase.leaveGame(gameCode, id, id === myDiscordId && isLocalClientHost);
+    } : null;
+
+    if(isKicked) {
+        return (
+            <div id="game-page">
+                <BlurpleBackground>
+                    <h1>Discord Roulette</h1>
+                    <Spacer height="50px" />
+                    <h2>You have been kicked from the game.</h2>
+                    <Spacer height="50px" />
+                    <Center>
+                        <Link to="/" className="nostyle">
+                            <Button content="Back to Home" emoji="🏠" />
+                        </Link>
+                    </Center>
+                </BlurpleBackground>
+            </div>
+        );
+    }
 
     if(phase === "closed") {
         return (
@@ -102,7 +112,7 @@ function GamePage() {
         <div className="lobby">
             <h2>Waiting for players to join...</h2>
             <Spacer height="30px" />
-            <AvatarStack userIds={activePlayerIds} />
+            <AvatarStack userIds={activePlayerIds} onUserKick={onUserKick} />
             <Spacer height="50px" />
             {
                 isLocalClientHost && (
@@ -128,11 +138,17 @@ function GamePage() {
                     <>
                         <h3>Voted:</h3>
                         <Spacer height="20px" />
-                        <AvatarStack userIds={Object.keys(votes)} />
+                        <AvatarStack
+                            userIds={Object.keys(votes).filter(i => activePlayerIds.includes(i))}
+                            onUserKick={onUserKick}
+                        />
                         <Spacer height="20px" />
                         <h3>Waiting for:</h3>
                         <Spacer height="20px" />
-                        <AvatarStack userIds={activePlayerIds.filter(id => !(id in votes))} />
+                        <AvatarStack
+                            userIds={activePlayerIds.filter(id => !(id in votes))}
+                            onUserKick={onUserKick}
+                        />
                         <Spacer height="20px" />
                         {
                             isLocalClientHost && (
@@ -157,7 +173,7 @@ function GamePage() {
         [...activePlayerIds].sort((a, b) => (points[b] || 0) - (points[a] || 0))
         .map(id => (
             <div className="leaderboard-entry" key={id}>
-                <AvatarStack userIds={[id]} />
+                <AvatarStack userIds={[id]} onUserKick={onUserKick} />
                 <p><b>{members[id].displayName}</b></p>
                 <p>{points[id] || 0} points</p>
             </div>
@@ -174,7 +190,10 @@ function GamePage() {
             <Spacer height="20px" />
             <h2>Winners</h2>
             <Spacer height="20px" />
-            <AvatarStack userIds={winners} />
+            <AvatarStack
+                userIds={winners.filter(i => activePlayerIds.includes(i))}
+                onUserKick={onUserKick}
+            />
             {
                 isLocalClientHost && (
                     <Center>

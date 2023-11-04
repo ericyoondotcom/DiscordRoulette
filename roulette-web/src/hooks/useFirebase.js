@@ -5,7 +5,7 @@ import { FIREBASE_CONFIG } from "../constants";
 import { useDispatch } from "react-redux";
 import { useCallback, useEffect } from "react";
 import { onMembersChanged } from "../helpers/slices/chatDataSlice";
-import { onActivePlayerIdsChanged, onCurrentMessageRunChanged, onGamePhaseChanged, onPointsChanged, onVotesChanged } from "../helpers/slices/gameStateSlice";
+import { onActivePlayerIdsChanged, onCurrentMessageRunChanged, onGamePhaseChanged, onInactivePlayerIdsChanged, onPointsChanged, onVotesChanged } from "../helpers/slices/gameStateSlice";
 
 const firebase = initializeApp(FIREBASE_CONFIG);
 const db = getDatabase(firebase);
@@ -104,14 +104,18 @@ function useFirebase(gameCode) {
 
             if(!data) {
                 dispatch(onActivePlayerIdsChanged([]));
+                dispatch(onInactivePlayerIdsChanged([]));
                 return;
             }
 
             const newActivePlayers = [];
+            const newInactivePlayers = [];
             for(const id of Object.keys(data)) {
                 if(data[id] === true) newActivePlayers.push(id);
+                else if(data[id] === false) newInactivePlayers.push(id);
             }
             dispatch(onActivePlayerIdsChanged(newActivePlayers));
+            dispatch(onInactivePlayerIdsChanged(newInactivePlayers));
         });
 
         const votesRef = ref(db, `/games/${gameCode}/votes`);

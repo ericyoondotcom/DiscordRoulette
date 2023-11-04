@@ -6,6 +6,7 @@ export const gameStateSlice = createSlice({
         isLocalClientHost: false,
         gamePhase: "idle", // idle, waiting-for-players, voting, results 
         activePlayerIds: [],
+        inactivePlayerIds: [],
         myDiscordId: null,
         votes: {},
         points: {},
@@ -32,6 +33,9 @@ export const gameStateSlice = createSlice({
         onActivePlayerIdsChanged: (state, action) => {
             state.activePlayerIds = action.payload;
         },
+        onInactivePlayerIdsChanged: (state, action) => {
+            state.inactivePlayerIds = action.payload;
+        },
         onVotesChanged: (state, action) => {
             state.votes = action.payload;
         },
@@ -50,6 +54,7 @@ export const {
     onUserSelect,
     onGamePhaseChanged,
     onActivePlayerIdsChanged,
+    onInactivePlayerIdsChanged,
     onVotesChanged,
     onPointsChanged,
     onCurrentMessageRunChanged,
