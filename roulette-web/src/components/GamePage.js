@@ -132,6 +132,14 @@ function GamePage() {
                 username="???"
                 text={currentMessageRun.content}
             />
+            {
+                isLocalClientHost && (
+                    <Center>
+                        <Spacer height="50px" />
+                        <Button content="Skip" emoji="⏭️" onClick={nextRound} />
+                    </Center>
+                )
+            }
             <Spacer height="50px" />
             {
                 myDiscordId in votes ? (

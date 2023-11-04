@@ -18,6 +18,7 @@
     "react-scripts": "5.0.1",
     "react-twemoji": "^0.5.0",
     "tsparticles": "^2.10.1",
+    "twemoji": "^14.0.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

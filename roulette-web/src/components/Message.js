@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
+import twemoji from "twemoji";
 import Twemoji from "react-twemoji";
 import "./stylesheets/Message.css";
 import TwemojiText from "./TwemojiText";
@@ -21,16 +22,26 @@ function Message({
         </div>
     );
 
+    // const twemojiRef = React.useRef(null);
+
+    // useEffect(() => {
+    //     if (twemojiRef.current) {
+    //         twemoji.parse(twemojiRef.current, {
+    //             className: "twemoji-text-img"
+    //         });
+    //     }
+    // }, [twemojiRef, text]);
+
     return (
         <div className={`message ${animated ? "animated" : ""}`}>
             {avatar}
             <div className="right-content">
                 <p className="message-username discord-font">{username}</p>
-                <TwemojiText>
+                {/* <TwemojiText> TODO: BUG WHERE TWEMOJI DOESNT PLAY NICE WITH MARKDOWN, CAUSING IT TO NOT UPDATE PROPERLY */}
                     <p className="message-text discord-font">
                         <ReactMarkdown>{text}</ReactMarkdown>
                     </p>
-                </TwemojiText>
+                {/* </TwemojiText> */}
             </div>
         </div>
     );
