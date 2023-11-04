@@ -90,7 +90,7 @@ function GamePage() {
         );
     }
 
-    const playerSelect = (phase === "waiting-for-players" && !myDiscordId) && (
+    const playerSelect = !myDiscordId && (
         <UserSelect
             title="Which Discord user are you?"
             onlyShowInactiveUsers
@@ -105,7 +105,7 @@ function GamePage() {
             <AvatarStack userIds={activePlayerIds} />
             <Spacer height="50px" />
             {
-                (isLocalClientHost && activePlayerIds.length >= 2) && (
+                isLocalClientHost && (
                     <Center>
                         <Button content="Start game" emoji="🎉" onClick={nextRound} />
                     </Center>
